@@ -164,7 +164,7 @@ def get_GenericKernels(generic_kernel_dir, basedir=''):
     
     return(retrieved_files)
 
-def run_wgetForSPICE(url, savedir, namepattern, show_progress=False):
+def run_wgetForSPICE(url, savedir, namepattern, show_progress=True):
     
     #  In case savedir is being handled as a pathlib Path, which subprocess
     #  doesn't like

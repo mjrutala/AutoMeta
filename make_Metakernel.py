@@ -74,7 +74,7 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir):
         case _:
             return(None)
     
-    path_info['spk']['savedir'] = [spacecraft_kernel_dir / 'spk/']
+    path_info['spk']['savedir'] = [spacecraft_kernel_dir / 'spk']
     
     
     #  Loop over each column, getting the file
@@ -181,7 +181,7 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True):
     #  -nd: copy all files to this directory (could be --cut-dirs=#...)
     #  -s-show_progress: give a loading bar showing download time
     #  -q: quiet, don't show any other info
-    flags = ['-r', '-R', '*.html', '-np', '--level=', '1',
+    flags = ['-r', '-R', '*.html', '-np', '--level=1',
              '--directory-prefix=' + savedir, 
              '-nH', '-nd', '-q']
     if show_progress:
@@ -191,7 +191,7 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True):
     host_url = [url]
 
     commandline = commandname + flags + filepattern_flags + host_url
-
+    
     subprocess.run(commandline)
 
 def make_Metakernel(spacecraft, basedir = ''):

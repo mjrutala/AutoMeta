@@ -64,7 +64,11 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir):
             
         case 'voyager2':
             path_info['spk']['url'] = [baseurl + 'VOYAGER/kernels/spk/']
-            path_info['spk']['namepattern'] = ['Voyager_2.m05016u.merged.bsp .bsp']
+            path_info['spk']['namepattern'] = ['Voyager_2.m05016u.merged.bsp']
+            
+        case 'cassini':
+            path_info['spk']['url'] = [baseurl + 'CASSINI/kernels/spk/']
+            path_info['spk']['namepattern'] = ['200128RU_SCPSE_?????_?????.bsp']
             
         case 'juno':
             url = baseurl + 'pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/spk/'
@@ -240,13 +244,17 @@ def make_Metakernel(spacecraft, basedir = ''):
             formatted_path = Path('$GENERIC') / rel_filepath
             formatted_path_str = "\t'" + str(formatted_path) + "'"
             generic_path_str_to_write.append(formatted_path_str)
+    generic_path_str_to_write.sort()
             
     for filepath in spacecraft_kernel_filepaths:
         rel_filepath = Path(os.path.relpath(filepath, path_dict['spacecraft_kernel_dir']))
         
-        formatted_path = Path('$SPACECRAFT') / rel_filepath
-        formatted_path_str = "\t'" + str(formatted_path) + "'"
-        spacecraft_path_str_to_write.append(formatted_path_str)
+        #  The Metakernel doesn't care about label files, those are for you
+        if '.lbl' not in str(rel_filepath):
+            formatted_path = Path('$SPACECRAFT') / rel_filepath
+            formatted_path_str = "\t'" + str(formatted_path) + "'"
+            spacecraft_path_str_to_write.append(formatted_path_str)
+    spacecraft_path_str_to_write.sort()
     
     check = 'n'
     if os.path.exists(mk_filepath):

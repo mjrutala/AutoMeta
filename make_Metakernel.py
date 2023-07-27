@@ -37,7 +37,7 @@ def make_SPICEDirectories(spacecraft, basedir=''):
     
     return(path_dict, metakernel_filepath)
 
-def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir):
+def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False):
     """
     
     """
@@ -93,13 +93,13 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir):
                 for savedir in column['savedir']:
                     for namepattern in column['namepattern']:
                         #  Get the file with wget
-                        run_wgetForSPICE(url, savedir, namepattern)
+                        run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
                         
                         #  Look for the files
                         retrieved_files.extend(list(savedir.glob(namepattern)))
     return(retrieved_files)
 
-def get_GenericKernels(generic_kernel_dir, basedir=''):
+def get_GenericKernels(generic_kernel_dir, basedir='', force_update=False):
     """
     The generic kernels retrieved by this program are sufficient for playing
     around with SPICE, but are by no means exhaustive of those one would need
@@ -163,7 +163,7 @@ def get_GenericKernels(generic_kernel_dir, basedir=''):
                     print(savedir)
                     
                     #  Get the file with wget
-                    run_wgetForSPICE(url, savedir, namepattern)
+                    run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
                     
                     #  Look for the files
                     retrieved_files.extend(list(savedir.glob(namepattern)))
@@ -171,7 +171,7 @@ def get_GenericKernels(generic_kernel_dir, basedir=''):
     
     return(retrieved_files)
 
-def run_wgetForSPICE(url, savedir, namepattern, show_progress=True):
+def run_wgetForSPICE(url, savedir, namepattern, show_progress=True, force_update=False):
     
     #  In case savedir is being handled as a pathlib Path, which subprocess
     #  doesn't like
@@ -188,9 +188,12 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True):
     #  -nd: copy all files to this directory (could be --cut-dirs=#...)
     #  -s-show_progress: give a loading bar showing download time
     #  -q: quiet, don't show any other info
+    #  --timestamping: use time-stamping, which should only download missing or updated files
     flags = ['-r', '-R', '*.html', '-np', '--level=1',
              '--directory-prefix=' + savedir, 
              '-nH', '-nd', '-q']
+    if not force_update:
+        flags.append('--timestamping')
     if show_progress:
         flags.append('--show-progress')
     
@@ -201,14 +204,14 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True):
     
     subprocess.run(commandline)
 
-def make_Metakernel(spacecraft, basedir = ''):
+def make_Metakernel(spacecraft, basedir = '', force_update=False):
     
     #  Get paths to store SPICE kernels, including the metakernel
     path_dict, mk_filepath = make_SPICEDirectories(spacecraft, basedir)
     
-    generic_kernel_filepaths = get_GenericKernels(path_dict['generic_kernel_dir'])
+    generic_kernel_filepaths = get_GenericKernels(path_dict['generic_kernel_dir'], force_update=force_update)
     
-    spacecraft_kernel_filepaths = get_SpacecraftKernels(spacecraft, path_dict['spacecraft_kernel_dir'])
+    spacecraft_kernel_filepaths = get_SpacecraftKernels(spacecraft, path_dict['spacecraft_kernel_dir'], force_update=force_update)
 
     #  Now that you downloaded all the received Juno telemetry from the front-facing NAIF database
     #  Read the file names and construct a metakernel

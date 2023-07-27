@@ -46,7 +46,7 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir):
     
     baseurl = 'https://naif.jpl.nasa.gov/pub/naif/'
     
-    path_info = pd.DataFrame(columns=['spk'], 
+    path_info = pd.DataFrame(columns=['fk', 'spk'], 
                              index=['url', 'savedir', 'namepattern'])
     match spacecraft:
 
@@ -70,14 +70,17 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir):
             path_info['spk']['url'] = [baseurl + 'CASSINI/kernels/spk/']
             path_info['spk']['namepattern'] = ['200128RU_SCPSE_?????_?????.bsp']
             
+            
         case 'juno':
-            url = baseurl + 'pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/spk/'
-            filename_pattern = '*juno_rec_??????_??????_??????*'
-            #filetype = ['.bsp', '.lbl']
-            return(None)
+            path_info['spk']['url'] = [baseurl + 'pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/spk/']
+            path_info['spk']['namepattern'] = ['*juno_rec_??????_??????_??????*.bsp']
+            
+            path_info['fk']['url'] = [baseurl + 'pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/fk/']
+            path_info['fk']['namepattern'] = ['juno_v??.*']
         case _:
             return(None)
     
+    path_info['fk']['savedir'] = [spacecraft_kernel_dir / 'fk']
     path_info['spk']['savedir'] = [spacecraft_kernel_dir / 'spk']
     
     
@@ -279,85 +282,85 @@ def make_Metakernel(spacecraft, basedir = ''):
     
     return(mk_filepath)
 
-def deprecated_generate_JunoMetakernel(update_files = False):
-    import subprocess
-    import os
-    import glob
+# def deprecated_generate_JunoMetakernel(update_files = False):
+#     import subprocess
+#     import os
+#     import glob
     
-    output_file = '/Users/mrutala/SPICE/juno/metakernel_juno.txt'
+#     output_file = '/Users/mrutala/SPICE/juno/metakernel_juno.txt'
     
-    filepattern = '*juno_rec_??????_??????_??????*'
-    #filetype = ['.bsp', '.lbl']
+#     filepattern = '*juno_rec_??????_??????_??????*'
+#     #filetype = ['.bsp', '.lbl']
     
-    destination_dir = '/Users/mrutala/SPICE/juno/kernels/spk/'
+#     destination_dir = '/Users/mrutala/SPICE/juno/kernels/spk/'
     
-    command = ['wget']
-    flags = ['-r', '-R', '*.html', '-np', '--directory-prefix=' + destination_dir, '-nv', '-nH', '--cut-dirs=8', '--show-progress', '-q']
-    filepattern_flags = ['--accept=' + filepattern]
-    host_url = ['https://naif.jpl.nasa.gov/pub/naif/pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/spk/']
+#     command = ['wget']
+#     flags = ['-r', '-R', '*.html', '-np', '--directory-prefix=' + destination_dir, '-nv', '-nH', '--cut-dirs=8', '--show-progress', '-q']
+#     filepattern_flags = ['--accept=' + filepattern]
+#     host_url = ['https://naif.jpl.nasa.gov/pub/naif/pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/spk/']
     
-    line = command + flags + filepattern_flags + host_url
-    if update_files:
-        subprocess.run(line)
+#     line = command + flags + filepattern_flags + host_url
+#     if update_files:
+#         subprocess.run(line)
     
-    #  Now that you downloaded all the received Juno telemetry from the front-facing NAIF database
-    #  Read the file names and construct a metakernel
+#     #  Now that you downloaded all the received Juno telemetry from the front-facing NAIF database
+#     #  Read the file names and construct a metakernel
     
 
-    metakernel_header = ["# The meta kernel file contains entries pointing to the following SPICE kernels, which the user needs to download.",
-                         "#",
-                         "#   The following is the contents of a metakernel that was saved with",
-                         "#   the name 'metakernel_juno.txt'.",
-                         "\\begindata",
-                         "    PATH_VALUES = (",
-                         "        '/Users/mrutala/SPICE/juno/kernels/',",
-                         "        '/Users/mrutala/SPICE/generic/kernels/'",
-                         "        )",
-                         "    PATH_SYMBOLS = (",
-                         "        'SPACECRAFT',",
-                         "        'GENERIC'",
-                         "        )",
-                         "    KERNELS_TO_LOAD = (",
-                         "        '$GENERIC/lsk/latest_leapseconds.tls'"]
-    metakernel_footer = ["        )",
-                         "\\begintext"]
+#     metakernel_header = ["# The meta kernel file contains entries pointing to the following SPICE kernels, which the user needs to download.",
+#                          "#",
+#                          "#   The following is the contents of a metakernel that was saved with",
+#                          "#   the name 'metakernel_juno.txt'.",
+#                          "\\begindata",
+#                          "    PATH_VALUES = (",
+#                          "        '/Users/mrutala/SPICE/juno/kernels/',",
+#                          "        '/Users/mrutala/SPICE/generic/kernels/'",
+#                          "        )",
+#                          "    PATH_SYMBOLS = (",
+#                          "        'SPACECRAFT',",
+#                          "        'GENERIC'",
+#                          "        )",
+#                          "    KERNELS_TO_LOAD = (",
+#                          "        '$GENERIC/lsk/latest_leapseconds.tls'"]
+#     metakernel_footer = ["        )",
+#                          "\\begintext"]
 
 
-    # =============================================================================
-    # Format spacecraft telemetry files for printing
-    # =============================================================================
-    SPACECRAFT_KERNELS_TO_LOAD = []
+#     # =============================================================================
+#     # Format spacecraft telemetry files for printing
+#     # =============================================================================
+#     SPACECRAFT_KERNELS_TO_LOAD = []
     
-    sc_rec_tel_long = glob.glob(destination_dir + 'juno_rec_orbit' + '.bsp')
-    sc_rec_tel_long_filenames = [os.path.basename(f) for f in sc_rec_tel_long]
-    sc_rec_tel_long_filenames.sort()
-    sc_rec_tel_long_filenames_formatted = ['\t' + "'$SPACECRAFT" + os.sep + 'spk' + os.sep + filename + "'" for filename in sc_rec_tel_long_filenames]
+#     sc_rec_tel_long = glob.glob(destination_dir + 'juno_rec_orbit' + '.bsp')
+#     sc_rec_tel_long_filenames = [os.path.basename(f) for f in sc_rec_tel_long]
+#     sc_rec_tel_long_filenames.sort()
+#     sc_rec_tel_long_filenames_formatted = ['\t' + "'$SPACECRAFT" + os.sep + 'spk' + os.sep + filename + "'" for filename in sc_rec_tel_long_filenames]
     
-    SPACECRAFT_KERNELS_TO_LOAD.extend(sc_rec_tel_long_filenames_formatted)
+#     SPACECRAFT_KERNELS_TO_LOAD.extend(sc_rec_tel_long_filenames_formatted)
     
-    sc_rec_tel_short = glob.glob(destination_dir + filepattern[:-1] + '.bsp')
-    sc_rec_tel_short_filenames = [os.path.basename(f) for f in sc_rec_tel_short]
-    sc_rec_tel_short_filenames.sort()
-    sc_rec_tel_short_filenames_formatted = ['\t' + "'$SPACECRAFT" + os.sep + 'spk' + os.sep + filename + "'" for filename in sc_rec_tel_short_filenames]
+#     sc_rec_tel_short = glob.glob(destination_dir + filepattern[:-1] + '.bsp')
+#     sc_rec_tel_short_filenames = [os.path.basename(f) for f in sc_rec_tel_short]
+#     sc_rec_tel_short_filenames.sort()
+#     sc_rec_tel_short_filenames_formatted = ['\t' + "'$SPACECRAFT" + os.sep + 'spk' + os.sep + filename + "'" for filename in sc_rec_tel_short_filenames]
     
-    SPACECRAFT_KERNELS_TO_LOAD.extend(sc_rec_tel_short_filenames_formatted)
+#     SPACECRAFT_KERNELS_TO_LOAD.extend(sc_rec_tel_short_filenames_formatted)
     
-    check = 'n'
-    if os.path.exists(output_file):
-        print('Metakernel text file: ' + output_file + 'already exists.')
-        check = input('Would you like to overwrite it? (y/n)  ')
-    else:
-        check = 'y'
+#     check = 'n'
+#     if os.path.exists(output_file):
+#         print('Metakernel text file: ' + output_file + 'already exists.')
+#         check = input('Would you like to overwrite it? (y/n)  ')
+#     else:
+#         check = 'y'
     
-    if check == 'y':
-        with open(output_file, mode='w') as f:
-            for output_line in metakernel_header:
-                f.write('%s\n' % output_line)
+#     if check == 'y':
+#         with open(output_file, mode='w') as f:
+#             for output_line in metakernel_header:
+#                 f.write('%s\n' % output_line)
             
-            for output_line in SPACECRAFT_KERNELS_TO_LOAD:
-                f.write('%s\n' % output_line)
+#             for output_line in SPACECRAFT_KERNELS_TO_LOAD:
+#                 f.write('%s\n' % output_line)
                 
-            for output_line in metakernel_footer:
-                f.write('%s\n' % output_line)
+#             for output_line in metakernel_footer:
+#                 f.write('%s\n' % output_line)
     
-    #return(sc_rec_tel_short)
+#     #return(sc_rec_tel_short)

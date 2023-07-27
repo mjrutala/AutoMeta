@@ -16,6 +16,8 @@ def make_SPICEDirectories(spacecraft, basedir=''):
     
     #  Shape the spacecraft string and create a Path from the basedir
     spacecraft = spacecraft.lower().strip().replace(' ','')
+    if basedir == '':
+        basedir = os.getcwd()
     basedir = Path(basedir)
     SPICEdir = basedir / 'SPICE'
     
@@ -209,10 +211,10 @@ def make_Metakernel(spacecraft, basedir = '', force_update=False):
     #  Get paths to store SPICE kernels, including the metakernel
     path_dict, mk_filepath = make_SPICEDirectories(spacecraft, basedir)
     
-    generic_kernel_filepaths = get_GenericKernels(path_dict['generic_kernel_dir'], force_update=force_update)
+    generic_kernel_filepaths = get_GenericKernels(path_dict['generic_kernel_dir'], force_update=force_update)   
     
     spacecraft_kernel_filepaths = get_SpacecraftKernels(spacecraft, path_dict['spacecraft_kernel_dir'], force_update=force_update)
-
+    
     #  Now that you downloaded all the received Juno telemetry from the front-facing NAIF database
     #  Read the file names and construct a metakernel
     
@@ -222,8 +224,8 @@ def make_Metakernel(spacecraft, basedir = '', force_update=False):
                           "#   the name '" + mk_filepath.name + ".'",
                           "\\begindata",
                           "    PATH_VALUES = (",
-                          "        '" + str(path_dict['generic_kernel_dir']) + "'",
-                          "        '" + str(path_dict['spacecraft_kernel_dir']) + "'",
+                          "        '" + str(basedir / path_dict['generic_kernel_dir']) + "'",
+                          "        '" + str(basedir / path_dict['spacecraft_kernel_dir']) + "'",
                           "        )",
                           "    PATH_SYMBOLS = (",
                           "        'GENERIC'",

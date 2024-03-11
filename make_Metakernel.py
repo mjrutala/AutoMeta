@@ -311,3 +311,10 @@ def make_Metakernel(spacecraft, basedir = '', force_update=False):
                 f.write('%s\n' % output_line)
     
     return(mk_filepath)
+
+if __name__ == "__main__":
+    spacecraft = input('Name of target spacecraft:')
+    basedir = input('Name of the SPICE base directory (press enter for current directory):')
+    result = make_Metakernel(spacecraft, basedir = basedir)
+    print('Finished!')
+    print('SPICE MetaKernel for {} wrtten to: {}'.format(spacecraft, result))

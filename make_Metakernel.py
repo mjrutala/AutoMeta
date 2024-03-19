@@ -11,6 +11,14 @@ import os
 import glob
 import pandas as pd
 from pathlib import Path
+import requests
+from bs4 import BeautifulSoup
+from tqdm import tqdm
+from datetime import datetime, timedelta, timezone
+from contextlib import nullcontext
+import tempfile
+import logging
+import fnmatch
 
 def make_SPICEDirectories(spacecraft, basedir=''):
     
@@ -95,7 +103,7 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False)
                 for savedir in column['savedir']:
                     for namepattern in column['namepattern']:
                         #  Get the file with wget
-                        run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
+                        run_requestsForSPICE(url, savedir, namepattern, force_update=force_update)
                         
                         #  Look for the files
                         retrieved_files.extend(list(savedir.glob(namepattern)))
@@ -165,7 +173,7 @@ def get_GenericKernels(generic_kernel_dir, basedir='', force_update=False):
                     print(savedir)
                     
                     #  Get the file with wget
-                    run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
+                    run_requestsForSPICE(url, savedir, namepattern, force_update=force_update)
                     
                     #  Look for the files
                     retrieved_files.extend(list(savedir.glob(namepattern)))
@@ -204,7 +212,82 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True, force_update
 
     commandline = commandname + flags + filepattern_flags + host_url
     
+    logging.info(f"Download with wget: {' '.join(commandline)}")
     subprocess.run(commandline)
+
+
+def run_requestsForSPICE(url, savedir, namepattern, show_progress=True, force_update=False):
+    '''
+    Use requests lib to download data. This doesn't depend on wget.
+
+    @author: RibomBalt
+    '''
+    #  In case savedir is being handled as a pathlib Path, which subprocess
+    #  doesn't like
+    savedir = str(savedir)
+    # make directory for download first
+    os.makedirs(savedir, exist_ok=True)
+
+    # get index page
+    r = requests.get(url)
+    html = BeautifulSoup(r.text, 'lxml')
+    # get all a tag in html
+    hrefs = html.select('td>pre>a')
+
+    for href in hrefs:
+        filename = href.get('href')
+        local_path = os.path.join(savedir, filename)
+        remote_path = f"{url}/{filename}"
+
+        logging.debug(filename)
+        
+        if fnmatch.fnmatch(filename, namepattern):
+            logging.info(f"File Matched: {filename}")
+
+            # =====================
+            # Followings are general downloading code with requests
+            # TODO: add retry
+            # TODO: maybe download to temp file first then move to target path, so not likely to download incomplete files
+
+            headers = {}
+            if (not force_update) and os.path.isfile(local_path):
+                # seems always UTC time
+                headers['If-Modified-Since'] = datetime.fromtimestamp(os.path.getmtime(local_path), tz=timezone.utc).strftime('%a, %d %b %Y %H:%M:%S GMT')
+                logging.debug(f"headers: {headers}")
+                
+            else:
+                pass
+                
+            r = requests.get(remote_path, headers=headers, stream=True)
+            if r.status_code == 304:
+                # data already downloaded, skip
+                logging.info(f"File Skiped: {local_path}, {remote_path}")
+            elif r.status_code == 200:
+                # actually downloading data
+                logging.info(f"Start downloading...: {local_path} <- {remote_path}")
+                if show_progress:
+                    guess_len = int(r.headers['Content-Length']) if 'Content-Length' in r.headers else 1024 ** 2 * 5
+                    pbar = tqdm(desc=filename, total=guess_len, unit='B')
+                else:
+                    pbar = nullcontext()
+                    # implement a null update method
+                    pbar.update = lambda n: None
+                
+
+                with pbar:
+                    with open(local_path, 'wb') as fp:
+                        for chunk in r.iter_content(chunk_size=8192):
+                            fp.write(chunk)
+                            pbar.update(len(chunk))
+                
+                logging.info(f"File Downloaded: {local_path}")
+
+            else:
+                raise ConnectionError(f"{remote_path} not downloaded, {r.status_code}, {r.text}, {r.headers}")
+            # ==============
+
+
+
 
 # def run_urllibForSPICE(url, savedir, namepattern, show_progress=True, force_update=False):
     

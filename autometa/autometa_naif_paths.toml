@@ -1,0 +1,12 @@
+[server]
+url = 'https://naif.jpl.nasa.gov/pub/naif/'
+
+[generic]
+
+    [generic.lsk]
+    url = 'generic_kernels/lsk/'
+    stem_pattern = ['naif????', 'latest_leapseconds']
+    unix_or_windows = true
+        [generic.lsk.suffix]
+        'unix' = '.tls'
+        'windows' = '.tls.pc'

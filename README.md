@@ -1,4 +1,4 @@
-# DIASPICETools
+# AutoMeta
 A small package of useful tools for setting up and interfacing with NASA/NAIF's SPICE toolkit (via SpiceyPy)
 
 Currently, the most useful tool included is `make_Metakernel()`, which accesses `wget` via a Python interface to automatically downloads the kernels required for a given spacecraft's trajectory, stores them in an appropriate directory structure, and then writes a metakernel containing symbolic links to all the downloaded kernels.

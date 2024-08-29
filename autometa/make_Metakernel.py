@@ -88,7 +88,7 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False)
             
         case 'messenger':
             path_info['spk']['url'] = [baseurl + 'pds/data/mess-e_v_h-spice-6-v1.0/messsp_1000/data/spk/']
-            path_info['spk']['namepattern'] = ['msgr_??????_??????_??????.bsp']  #  Maybe not correct?
+            path_info['spk']['namepattern'] = ['msgr_??????_??????_recon_gsfc_1.bsp']  #  Excludes cruise phase
             
         case _:
             return(None)

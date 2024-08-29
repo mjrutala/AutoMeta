@@ -87,7 +87,7 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False)
             path_info['fk']['namepattern'] = ['juno_v??.*']
             
         case 'messenger':
-            path_info['spk']['url'] = [basurl + 'pds/data/mess-e_v_h-spice-6-v1.0/messsp_1000/data/spk/']
+            path_info['spk']['url'] = [baseurl + 'pds/data/mess-e_v_h-spice-6-v1.0/messsp_1000/data/spk/']
             path_info['spk']['namepattern'] = ['msgr_??????_??????_??????.bsp']  #  Maybe not correct?
             
         case _:

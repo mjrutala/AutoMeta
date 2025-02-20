@@ -3,6 +3,9 @@ A small package of useful tools for setting up and interfacing with NASA/NAIF's 
 
 Currently, the most useful tool included is `make_Metakernel()`, which accesses `wget` via a Python interface to automatically downloads the kernels required for a given spacecraft's trajectory, stores them in an appropriate directory structure, and then writes a metakernel containing symbolic links to all the downloaded kernels.
 
+Please note that this package is a *work in progress*, and is available as-is. The current release is *not* guaranteed to be stable. Please feel free to raise issues or submit changes!
+
+## Usage
 Basic usage to create a spacecraft Metakernel: <br>
 (1) From the installation directory, run: <br>
 `>>> make_Metakernel.py` <br>

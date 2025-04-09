@@ -70,7 +70,7 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False)
             
         case 'cassini':
             path_info['spk']['url'] = [baseurl + 'CASSINI/kernels/spk/']
-            path_info['spk']['namepattern'] = ['??????R_SCPSE_?????_?????.bsp']
+            path_info['spk']['namepattern'] = ['??????RU_SCPSE_?????_?????.bsp']
             
             path_info['fk']['url'] = [baseurl + 'CASSINI/kernels/fk/']
             path_info['fk']['namepattern'] = ['cas_dyn_v??.*']

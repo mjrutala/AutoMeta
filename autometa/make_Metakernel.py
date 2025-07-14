@@ -39,7 +39,7 @@ def make_SPICEDirectories(spacecraft, basedir=''):
     
     return(path_dict, metakernel_filepath)
 
-def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False):
+def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False, wget=False):
     """
     
     """
@@ -53,49 +53,48 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False)
     match spacecraft:
 
         case 'pioneer10':
-            path_info['spk']['url'] = [baseurl + 'PIONEER10/kernels/spk/']
-            path_info['spk']['namepattern'] = ['*.bsp']
+            path_info.loc['url', 'spk'] = [baseurl + 'PIONEER10/kernels/spk/']
+            path_info.loc['namepattern', 'spk'] = ['*.bsp']
             
         case 'pioneer11':
-            path_info['spk']['url'] = [baseurl + 'PIONEER11/kernels/spk/']
-            path_info['spk']['namepattern'] = ['*.bsp']
+            path_info.loc['url', 'spk'] = [baseurl + 'PIONEER11/kernels/spk/']
+            path_info.loc['namepattern', 'spk'] = ['*.bsp']
             
         case 'voyager1':
-            path_info['spk']['url'] = [baseurl + 'VOYAGER/kernels/spk/']
-            path_info['spk']['namepattern'] = ['Voyager_1.a54206u_V0.2_merged.bsp']
+            path_info.loc['url', 'spk'] = [baseurl + 'VOYAGER/kernels/spk/']
+            path_info.loc['namepattern', 'spk'] = ['Voyager_1.a54206u_V0.2_merged.bsp']
             
         case 'voyager2':
-            path_info['spk']['url'] = [baseurl + 'VOYAGER/kernels/spk/']
-            path_info['spk']['namepattern'] = ['Voyager_2.m05016u.merged.bsp']
+            path_info.loc['url', 'spk'] = [baseurl + 'VOYAGER/kernels/spk/']
+            path_info.loc['namepattern', 'spk'] = ['Voyager_2.m05016u.merged.bsp']
             
         case 'cassini':
-            path_info['spk']['url'] = [baseurl + 'CASSINI/kernels/spk/']
-            path_info['spk']['namepattern'] = ['??????R_SCPSE_?????_?????.bsp']
+            path_info.loc['url', 'spk'] = [baseurl + 'CASSINI/kernels/spk/']
+            path_info.loc['namepattern', 'spk'] = ['??????R_SCPSE_?????_?????.bsp', '??????RU_SCPSE_?????_?????.bsp']
             
-            path_info['fk']['url'] = [baseurl + 'CASSINI/kernels/fk/']
-            path_info['fk']['namepattern'] = ['cas_dyn_v??.*']
+            path_info.loc['url', 'fk'] = [baseurl + 'CASSINI/kernels/fk/']
+            path_info.loc['namepattern', 'fk'] = ['cas_dyn_v??.*']
             
             
         case 'juno':
             #path_info['spk']['url'] = [baseurl + 'pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/spk/']
-            path_info['spk']['url'] = [baseurl + 'JUNO/kernels/spk/']
+            path_info.loc['url', 'spk'] = [baseurl + 'JUNO/kernels/spk/']
             #path_info['spk']['namepattern'] = ['*juno_rec_??????_??????_??????*.bsp']
-            path_info['spk']['namepattern'] = ['spk_rec_??????_??????_??????.bsp*']
+            path_info.loc['namepattern', 'spk'] = ['spk_rec_??????_??????_??????.bsp*']
             
             #path_info['fk']['url'] = [baseurl + 'pds/data/jno-j_e_ss-spice-6-v1.0/jnosp_1000/data/fk/']
-            path_info['fk']['url'] = [baseurl + 'JUNO/kernels/fk/']
-            path_info['fk']['namepattern'] = ['juno_v??.*']
+            path_info.loc['url', 'fk'] = [baseurl + 'JUNO/kernels/fk/']
+            path_info.loc['namepattern', 'fk'] = ['juno_v??.*']
             
         case 'messenger':
-            path_info['spk']['url'] = [baseurl + 'pds/data/mess-e_v_h-spice-6-v1.0/messsp_1000/data/spk/']
-            path_info['spk']['namepattern'] = ['msgr_??????_??????_recon_gsfc_1.bsp']  #  Excludes cruise phase
+            path_info.loc['url', 'spk'] = [baseurl + 'pds/data/mess-e_v_h-spice-6-v1.0/messsp_1000/data/spk/']
+            path_info.loc['namepattern', 'spk'] = ['msgr_??????_??????_recon_gsfc_1.bsp']  #  Excludes cruise phase
             
         case _:
             return(None)
     
-    path_info['fk']['savedir'] = [spacecraft_kernel_dir / 'fk']
-    path_info['spk']['savedir'] = [spacecraft_kernel_dir / 'spk']
-    
+    path_info.loc['savedir', 'fk'] = [spacecraft_kernel_dir / 'fk']
+    path_info.loc['savedir', 'spk'] = [spacecraft_kernel_dir / 'spk']
     
     #  Loop over each column, getting the file
     #  This is a horrible, horrible loop
@@ -105,14 +104,19 @@ def get_SpacecraftKernels(spacecraft, spacecraft_kernel_dir, force_update=False)
             for url in column['url']:
                 for savedir in column['savedir']:
                     for namepattern in column['namepattern']:
-                        #  Get the file with wget
-                        run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
                         
+                        if wget:
+                            #  Get the file with wget
+                            run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
+                        else:
+                            # Try urrlib
+                            run_urllibForSPICE(url, savedir, namepattern, force_update=force_update)
+                    
                         #  Look for the files
                         retrieved_files.extend(list(savedir.glob(namepattern)))
     return(retrieved_files)
 
-def get_GenericKernels(generic_kernel_dir, basedir='', force_update=False):
+def get_GenericKernels(generic_kernel_dir, basedir='', force_update=False, wget=False):
     """
     The generic kernels retrieved by this program are sufficient for playing
     around with SPICE, but are by no means exhaustive of those one would need
@@ -141,24 +145,24 @@ def get_GenericKernels(generic_kernel_dir, basedir='', force_update=False):
     #  LSK INFO
     suffix = '.tls'
     if 'Windows' in current_os: suffix += '.pc'
-    path_info['lsk']['url']         = [baseurl + 'generic_kernels/lsk/']
+    path_info.loc['url', 'lsk']         = [baseurl + 'generic_kernels/lsk/']
     #path_info['lsk']['savedir']     = [generic_kernel_dir / 'lsk']
-    path_info['lsk']['namepattern'] = ['naif????' + suffix,
+    path_info.loc['namepattern', 'lsk'] = ['naif????' + suffix,
                                        'latest_leapseconds' + suffix]
     
     #  PCK INFO
     suffix = '.tpc'
-    path_info['pck']['url']         = [baseurl + 'generic_kernels/pck/']
+    path_info.loc['url', 'pck']        = [baseurl + 'generic_kernels/pck/']
     #path_info['pck']['savedir']     = [generic_kernel_dir / 'pck']
-    path_info['pck']['namepattern'] = ['pck00011' + suffix]
+    path_info.loc['namepattern', 'pck'] = ['pck00011' + suffix]
     
     #  SPK INFO
     suffix = '.bsp'
-    path_info['spk']['url']         = [baseurl + 'generic_kernels/spk/planets/',
+    path_info.loc['url', 'spk']         = [baseurl + 'generic_kernels/spk/planets/',
                                        baseurl + 'generic_kernels/spk/satellites/']
     #path_info['spk']['savedir']     = [generic_kernel_dir / 'spk' / 'planets',
     #                                   generic_kernel_dir / 'spk' / 'satellites']
-    path_info['spk']['namepattern'] = ['de440s' + suffix,
+    path_info.loc['namepattern', 'spk'] = ['de440s' + suffix,
                                        'jup365' + suffix,
                                        'sat441' + suffix]
     
@@ -173,10 +177,14 @@ def get_GenericKernels(generic_kernel_dir, basedir='', force_update=False):
                     savedir_parts = Path(url.replace(baseurl, '')).parts[1:]
                     savedir = generic_kernel_dir
                     for part in savedir_parts: savedir = savedir / part
-                    print(savedir)
+                    # print(savedir)
                     
-                    #  Get the file with wget
-                    run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
+                    if wget:
+                        #  Get the file with wget
+                        run_wgetForSPICE(url, savedir, namepattern, force_update=force_update)
+                    else:
+                        # Try urrlib
+                        run_urllibForSPICE(url, savedir, namepattern, force_update=force_update)
                     
                     #  Look for the files
                     retrieved_files.extend(list(savedir.glob(namepattern)))
@@ -202,7 +210,7 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True, force_update
     #  -s-show_progress: give a loading bar showing download time
     #  -q: quiet, don't show any other info
     #  --timestamping: use time-stamping, which should only download missing or updated files
-    flags = ['-r', '-R', '*.html', '-np', '--level=1',
+    flags = ['-r', '-np', '--level=1',
              '--directory-prefix=' + savedir, 
              '-nH', '-nd', '-q']
     if not force_update:
@@ -210,37 +218,48 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True, force_update
     if show_progress:
         flags.append('--show-progress')
     
-    filepattern_flags = ['--accept=' + namepattern]
+    filepattern_flags = ['--accept=' + namepattern, '--reject=*.html']
     host_url = [url]
 
     commandline = commandname + flags + filepattern_flags + host_url
     
-    subprocess.run(commandline)
+    subprocess.run(commandline, check=True)
 
-# def run_urllibForSPICE(url, savedir, namepattern, show_progress=True, force_update=False):
+def run_urllibForSPICE(url, savedir, namepattern, show_progress=True, force_update=False):
+    import urllib
+    import re
+    from fnmatch import fnmatch
+    import tqdm
     
-#     #  In case savedir is being handled as a pathlib Path, which subprocess
-#     #  doesn't like
-#     savedir = str(savedir)
+    # #  In case savedir is being handled as a pathlib Path, which subprocess
+    # #  doesn't like
+    # savedir = str(savedir)
     
-#     html_url = url
-#     with urllib.request.urlopen(url) as response:
-#         html_body = response.read().decode('utf-8')
-#     soup = BeautifulSoup(html_body, 'html.parser')
+    # html_url = url
+    with urllib.request.urlopen(url) as response:
+        html_body = response.read().decode('utf-8')
     
-#     href_link_list = list()
-#     for a in soup.find_all('a', href=True):
-#         href_link_list.append(a['href'])
+    # Three-part filtering, for interpretability
+    # First, filter the html for all hrefs (links)
+    href_pattern = r'href=["\']([^"\']*)["\']'
+    href_list = re.findall(href_pattern, html_body)
     
-#     #  Check if namepattern occurs in href_link_list
+    # Second, remove weblinks (we only want files
+    file_list = [l for l in href_list if not l.startswith('http')]
+
+    # Third, match the remaining files to our namepattern
+    matching_file_list = [l for l in file_list if fnmatch(l, namepattern)]
+        
+    # Now download
+    import urllib.request
     
-#     #  Construct new urls including above matches
+    for f in tqdm.tqdm(matching_file_list, desc='Downloading to {}'.format(savedir)):
+        if not savedir.is_dir():
+            savedir.mkdir(parents=True)
+        filepath = savedir / f
+        urllib.request.urlretrieve(url, filepath)
     
-#     #  url request complete url names
-    
-    
-#     with file as urllib.request.URLopener():
-#         file.retreive(url)
+    return
     
 def make_Metakernel(spacecraft, basedir = '', force_update=False):
     

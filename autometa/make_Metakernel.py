@@ -255,7 +255,7 @@ def run_urllibForSPICE(url, savedir, namepattern, show_progress=True, force_upda
         if not savedir.is_dir():
             savedir.mkdir(parents=True)
         filepath = savedir / f
-        urllib.request.urlretrieve(url, filepath)
+        urllib.request.urlretrieve(url+f, filepath)
     
     return
     

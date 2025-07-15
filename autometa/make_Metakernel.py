@@ -226,7 +226,7 @@ def run_wgetForSPICE(url, savedir, namepattern, show_progress=True, force_update
     subprocess.run(commandline, check=True)
 
 def run_urllibForSPICE(url, savedir, namepattern, show_progress=True, force_update=False):
-    import urllib
+    import urllib.request
     import re
     from fnmatch import fnmatch
     import tqdm
@@ -251,8 +251,6 @@ def run_urllibForSPICE(url, savedir, namepattern, show_progress=True, force_upda
     matching_file_list = [l for l in file_list if fnmatch(l, namepattern)]
         
     # Now download
-    import urllib.request
-    
     for f in tqdm.tqdm(matching_file_list, desc='Downloading to {}'.format(savedir)):
         if not savedir.is_dir():
             savedir.mkdir(parents=True)
